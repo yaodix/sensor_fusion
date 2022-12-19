@@ -8,7 +8,6 @@ const double pi = 3.1415;
 
 struct Ray
 {
-	
 	Vect3 origin;
 	double resolution;
 	Vect3 direction;
@@ -71,7 +70,6 @@ struct Ray
 
 struct Lidar
 {
-
 	std::vector<Ray> rays;
 	pcl::PointCloud<pcl::PointXYZ>::Ptr cloud;
 	std::vector<Car> cars;
@@ -88,19 +86,19 @@ struct Lidar
 		// TODO:: set minDistance to 5 to remove points from roof of ego car
 		minDistance = 5;
 		maxDistance = 50;
-		resoultion = 0.2;
+		resoultion = 0.2;  // ?
 		// TODO:: set sderr to 0.2 to get more interesting pcd files
 		sderr = 0.2;
 		cars = setCars;
-		groundSlope = setGroundSlope;
+		groundSlope = setGroundSlope;  // 
 
 		// TODO:: increase number of layers to 8 to get higher resoultion pcd
-		int numLayers = 8;
+		int numLayers = 12;
 		// the steepest vertical angle
 		double steepestAngle =  30.0*(-pi/180);
 		double angleRange = 26.0*(pi/180);
 		// TODO:: set to pi/64 to get higher resoultion pcd
-		double horizontalAngleInc = pi/64;
+		double horizontalAngleInc = pi/96;
 
 		double angleIncrement = angleRange/numLayers;
 
@@ -108,7 +106,7 @@ struct Lidar
 		{
 			for(double angle = 0; angle <= 2*pi; angle+=horizontalAngleInc)
 			{
-				Ray ray(position,angle,angleVertical,resoultion);
+				Ray ray(position, angle, angleVertical, resoultion);
 				rays.push_back(ray);
 			}
 		}

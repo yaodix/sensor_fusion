@@ -46,7 +46,7 @@ void simpleHighway(pcl::visualization::PCLVisualizer::Ptr& viewer)
     std::vector<Car> cars = initHighway(renderScene, viewer);
     
     // TODO:: Create lidar sensor 
-    Lidar* lidar = new Lidar(cars,0); // Make it on the Heap
+    Lidar* lidar = new Lidar(cars, 0); // Make it on the Heap
     pcl::PointCloud<pcl::PointXYZ>::Ptr inputCloud = lidar->scan();
     //renderPointCloud(viewer, inputCloud, "Test");
     
@@ -135,6 +135,7 @@ void initCamera(CameraAngle setAngle, pcl::visualization::PCLVisualizer::Ptr& vi
         viewer->addCoordinateSystem (5.0);  // scale of coordiante showing
 }
 
+
 int DemoShowSimpleHighway() {
     std::cout << "starting enviroment" << std::endl;
 
@@ -143,10 +144,13 @@ int DemoShowSimpleHighway() {
     // CameraAngle setAngle = TopDown;
     initCamera(setAngle, viewer);
 
-    bool renderScene = true;  // 显示高速场景
+    bool renderScene = false;  // 显示高速场景
     std::vector<Car> cars = initHighway(renderScene, viewer);
-    renderRays();
-    //cityBlock(viewer, pointProcessorI, inputCloudI);
+
+    Lidar* lidar = new Lidar(cars, 0); // Make it on the Heap
+    pcl::PointCloud<pcl::PointXYZ>::Ptr inputCloud = lidar->scan();
+    // renderRays(viewer, lidar->position, inputCloud);
+    renderPointCloud(viewer, inputCloud, "Test");
     
     while (!viewer->wasStopped ())
     {
