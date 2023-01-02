@@ -137,8 +137,7 @@ std::pair<typename pcl::PointCloud<PointT>::Ptr, typename pcl::PointCloud<PointT
 	// Return indicies of inliers from fitted line with most inliers
 	while(maxIterations--)
 	{
-
-		// Select two points randomly
+		// Select 3 points randomly
 		std::unordered_set<int> inliers; // hash set
 		while(inliers.size() != 3)
 			inliers.insert(rand()%(cloud->points.size()));
@@ -185,8 +184,7 @@ std::pair<typename pcl::PointCloud<PointT>::Ptr, typename pcl::PointCloud<PointT
 
 		}
 
-		if(inliers.size()>inliersResult.size())
-		{
+		if (inliers.size() > inliersResult.size()) {
 			inliersResult = inliers;
 		}
         
@@ -206,8 +204,6 @@ std::pair<typename pcl::PointCloud<PointT>::Ptr, typename pcl::PointCloud<PointT
     }
 
     std::pair<typename pcl::PointCloud<PointT>::Ptr, typename pcl::PointCloud<PointT>::Ptr> segResult(cloudOutliers, cloudInliers);
-
-
 
 	return segResult;
 }
@@ -296,14 +292,12 @@ std::vector<std::vector<int>> ProcessPointClouds<PointT>::euclideanCluster(const
 		i++;
 	}
 
-
-
 	return clusters;
-
 }
 
 template<typename PointT>
-std::vector<typename pcl::PointCloud<PointT>::Ptr> ProcessPointClouds<PointT>::Clustering_Custom(typename pcl::PointCloud<PointT>::Ptr cloud, float clusterTolerance, int minSize, int maxSize)
+std::vector<typename pcl::PointCloud<PointT>::Ptr> ProcessPointClouds<PointT>::Clustering_Custom(
+    typename pcl::PointCloud<PointT>::Ptr cloud, float clusterTolerance, int minSize, int maxSize)
 {
 
     // Time clustering process
@@ -355,7 +349,6 @@ std::vector<typename pcl::PointCloud<PointT>::Ptr> ProcessPointClouds<PointT>::C
 template<typename PointT>
 Box ProcessPointClouds<PointT>::BoundingBox(typename pcl::PointCloud<PointT>::Ptr cluster)
 {
-
     // Find bounding box for one of the clusters
     PointT minPoint, maxPoint;
     pcl::getMinMax3D(*cluster, minPoint, maxPoint);
