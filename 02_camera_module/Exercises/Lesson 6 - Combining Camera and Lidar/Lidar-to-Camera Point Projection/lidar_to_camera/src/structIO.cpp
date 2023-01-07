@@ -1,6 +1,10 @@
 #include <iostream>
 #include <fstream>
 #include <algorithm>
+
+#include <pcl/io/pcd_io.h>
+#include <pcl/point_types.h>
+
 #include <opencv2/highgui/highgui.hpp>
 #include "structIO.hpp"
 
@@ -55,7 +59,23 @@ void writeLidarPts(std::vector<LidarPoint> &input, const char* fileName)
     out.close();
 }
 
-
+void writePcdFile(std::vector<LidarPoint> &input, const std::string fileName) {
+    pcl::PointCloud<pcl::PointXYZI> cloud;
+  cloud.width    = input.size();
+  cloud.height   = 1;
+  cloud.is_dense = false;
+  cloud.points.reserve(cloud.width * cloud.height);
+  // Fill in the cloud data
+  for (LidarPoint& pt : input) {
+    pcl::PointXYZI pcl_pt;
+    pcl_pt.x = pt.x;
+    pcl_pt.y = pt.y;
+    pcl_pt.z = pt.z;
+    pcl_pt.intensity = pt.r;
+    cloud.points.push_back(pcl_pt);
+  }
+  pcl::io::savePCDFile(fileName, cloud);
+}
 void readLidarPts(const char* fileName, std::vector<LidarPoint> &output)
 {
     std::ifstream in(fileName);

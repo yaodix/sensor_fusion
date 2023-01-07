@@ -35,6 +35,7 @@ void projectLidarToCamera2()
     std::vector<LidarPoint> lidarPoints;
     readLidarPts("../dat/C51_LidarPts_0000.dat", lidarPoints);
 
+    writePcdFile(lidarPoints, "../dat/C51_LidarPts_0000.pcd");
     // store calibration data in OpenCV matrices
     cv::Mat P_rect_00(3,4,cv::DataType<double>::type); // 3x4 projection matrix after rectification
     cv::Mat R_rect_00(4,4,cv::DataType<double>::type); // 3x3 rectifying rotation to make image planes co-planar

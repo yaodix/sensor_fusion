@@ -2,8 +2,11 @@
 #define structIO_hpp
 
 #include <stdio.h>
+#include <string>
+
 #include "dataStructures.h"
 
+void writePcdFile(std::vector<LidarPoint> &input, const std::string fileName);
 void writeLidarPts(std::vector<LidarPoint> &input, const char* fileName);
 void readLidarPts(const char* fileName, std::vector<LidarPoint> &output);
 
