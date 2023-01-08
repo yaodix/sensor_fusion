@@ -12,8 +12,6 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/features2d.hpp>
-#include <opencv2/xfeatures2d.hpp>
-#include <opencv2/xfeatures2d/nonfree.hpp>
 
 #include "dataStructures.h"
 #include "matching2D.hpp"
@@ -33,7 +31,7 @@ int main(int argc, const char *argv[])
 
     // camera
     string imgBasePath = dataPath + "images/";
-    string imgPrefix = "KITTI/2011_09_26/image_02/data/000000"; // left camera, color
+    string imgPrefix = "KITTI/image_02/data/000000"; // left camera, color
     string imgFileType = ".png";
     int imgStartIndex = 0; // first file index to load (assumes Lidar and camera names have identical naming convention)
     int imgEndIndex = 70;   // last file index to load
@@ -47,7 +45,7 @@ int main(int argc, const char *argv[])
     string yoloModelWeights = yoloBasePath + "yolov3.weights";
 
     // Lidar
-    string lidarPrefix = "KITTI/2011_09_26/velodyne_points/data/000000";
+    string lidarPrefix = "KITTI/velodyne_points/data/000000";
     string lidarFileType = ".bin";
 
     // calibration data for camera and lidar
@@ -86,22 +84,18 @@ int main(int argc, const char *argv[])
     }
     DataLog << "\n";
 
-    vector<string> detectorTypes = {/*"HARRIS",*/ "FAST"/*, "BRISK", "ORB", "AKAZE", "SIFT"*/};
-    vector<string> descriptorTypes = {/*"BRISK",*/ "BRIEF",/* "ORB", "FREAK", "AKAZE", "SIFT"*/};
-    bool skip = false; // some combinations do not work due to param value clashing, see line 232
+    vector<string> detectorTypes = {/*"HARRIS",*/"SHITOMASI" /*,"FAST", "BRISK", "ORB", "AKAZE", "SIFT"*/};
+    // ORB donot need xfeature2d module, and slightly low performance
+    vector<string> descriptorTypes = {/*"BRISK","BRIEF",*/  "ORB"/*, "FREAK", "AKAZE", "SIFT"*/};  
 
     for(auto detType : detectorTypes)
     {//DETECTOR LOOP
-
         for(auto descType : descriptorTypes)
         {// DESCRIPTOR LOOP
 
             dataBuffer.clear();
-            cout << "Bool skip: " << skip << endl;
-            if(!skip) {DataLog << "\n";}
 
             /* MAIN LOOP OVER ALL IMAGES */
-
             for (size_t imgIndex = 0; imgIndex <= imgEndIndex - imgStartIndex; imgIndex+=imgStepWidth)
             {
                 /* LOAD IMAGE INTO BUFFER */
@@ -148,12 +142,17 @@ int main(int argc, const char *argv[])
                 // load 3D Lidar points from file
                 string lidarFullFilename = imgBasePath + lidarPrefix + imgNumber.str() + lidarFileType;
                 std::vector<LidarPoint> lidarPoints;
+
                 loadLidarFromFile(lidarPoints, lidarFullFilename);
 
                 // remove Lidar points based on distance properties
                 float minZ = -1.5, maxZ = -0.9, minX = 2.0, maxX = 20.0, maxY = 2.0, minR = 0.1; // focus on ego lane
+                double t_load = (double)cv::getTickCount();
                 cropLidarPoints(lidarPoints, minX, maxX, maxY, minZ, maxZ, minR);
+                t_load = ((double)cv::getTickCount() - t_load) / cv::getTickFrequency();
+                std::cout << "crop pc file time " << 1000 * t_load << " ms" << std::endl;
             
+                // writePcdFile(lidarPoints, "../report/crop.pcd");
                 (dataBuffer.end() - 1)->lidarPoints = lidarPoints;
 
                 cout << "#3 : CROP LIDAR POINTS done" << endl;
@@ -167,8 +166,7 @@ int main(int argc, const char *argv[])
 
                 // Visualize 3D objects
                 bVis = false;
-                if(bVis)
-                {
+                if(bVis) {
                     show3DObjects((dataBuffer.end()-1)->boundingBoxes, cv::Size(4.0, 20.0), cv::Size(400, 800), true);
                 }
                 bVis = false;
@@ -231,12 +229,6 @@ int main(int argc, const char *argv[])
                 string descriptorType = descType; // BRISK, BRIEF, ORB, FREAK, AKAZE, SIFT
                 dataLogger.push_back(descriptorType);
                 
-                skip = false;
-                // AKAZE cant be paired with other algorithms, only KAZE/AKAZE keypoints work with KAZE/AKAZE due to octave values
-                if(descType.compare("AKAZE") == 0 && detType.compare("AKAZE") != 0) {skip = true; break;}
-                // SIFT keypoints also do not process well with other descriptoes: experimentally SIFT-ORB do not work together
-                if(detType.compare("SIFT") == 0 && descType.compare("ORB") == 0) {skip = true; break;}
-
                 descKeypoints((dataBuffer.end() - 1)->keypoints, (dataBuffer.end() - 1)->cameraImg, descriptors, descriptorType, time);
 
                 // push descriptors for current frame to end of data buffer
@@ -286,7 +278,7 @@ int main(int argc, const char *argv[])
                     map<int, int> bbBestMatches;
                     matchBoundingBoxes(matches, bbBestMatches, *(dataBuffer.end()-2), *(dataBuffer.end()-1)); // associate bounding boxes between current and previous frame using keypoint matches
                     //// EOF STUDENT ASSIGNMENT
-
+std::cout << "bbBestMatches.size() " << bbBestMatches.size() << std::endl;
                     // store matches in current data frame
                     (dataBuffer.end()-1)->bbMatches = bbBestMatches;
 
@@ -374,16 +366,18 @@ int main(int argc, const char *argv[])
                                 }
                                 putText(visImg, str, cv::Point2f(80, 50), cv::FONT_HERSHEY_PLAIN, 2, cv::Scalar(0,0,255), 2);
                                 putText(visImg, strComb, cv::Point2f(80, 100), cv::FONT_HERSHEY_PLAIN, 2, cv::Scalar(0,0,255), 2);
-
+                                
+                                std::cout << str << std::endl;
+                                
                                 windowName = "Final Results : TTC";
                                 cv::namedWindow(windowName, 4);
                                 cv::imshow(windowName, visImg);
                                 cout << "Press key to continue to next frame" << endl;
-                                cv::waitKey(15000);
+                                cv::waitKey(100);
                             }
                             bVis = false;
 
-                            bSaveImg = true;
+                            bSaveImg = false;
                             if(bSaveImg)
                             {
                                 string saveImgPath_match = "../images/save_images/match/";

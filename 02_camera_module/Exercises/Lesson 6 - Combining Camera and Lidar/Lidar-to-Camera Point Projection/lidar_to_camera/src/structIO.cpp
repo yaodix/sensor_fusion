@@ -76,6 +76,7 @@ void writePcdFile(std::vector<LidarPoint> &input, const std::string fileName) {
   }
   pcl::io::savePCDFile(fileName, cloud);
 }
+
 void readLidarPts(const char* fileName, std::vector<LidarPoint> &output)
 {
     std::ifstream in(fileName);

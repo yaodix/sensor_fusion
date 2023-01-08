@@ -74,26 +74,26 @@ void descKeypoints(vector<cv::KeyPoint> &keypoints, cv::Mat &img, cv::Mat &descr
         
         extractor = cv::BRISK::create(threshold, octaves, patternScale);
     }
-    if(descriptorType.compare("BRIEF") == 0)
-    {
-        extractor = cv::xfeatures2d::BriefDescriptorExtractor::create();
-    }
+    // if(descriptorType.compare("BRIEF") == 0)
+    // {
+    //     extractor = cv::xfeatures2d::BriefDescriptorExtractor::create();
+    // }
     if(descriptorType.compare("ORB") == 0)
     {
         extractor = cv::ORB::create();
     }
-    if(descriptorType.compare("FREAK") == 0)
-    {
-        extractor = cv::xfeatures2d::FREAK::create();
-    }
+    // if(descriptorType.compare("FREAK") == 0)
+    // {
+    //     extractor = cv::xfeatures2d::FREAK::create();
+    // }
     if(descriptorType.compare("AKAZE") == 0)
     {
         extractor = cv::AKAZE::create();
     }
-    if(descriptorType.compare("SIFT") == 0)
-    {
-        extractor = cv::xfeatures2d::SIFT::create();
-    }
+    // if(descriptorType.compare("SIFT") == 0)
+    // {
+    //     extractor = cv::xfeatures2d::SIFT::create();
+    // }
 
     // perform feature description
     double t = (double)cv::getTickCount();
@@ -261,16 +261,16 @@ void detKeypointsModern(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, std:
         time.push_back(1000 * t / 1.0);
         cout << "AKAZE detection with n=" << keypoints.size() << " keypoints in " << 1000 * t / 1.0 << " ms" << endl;      
     }
-    if(detectorType.compare("SIFT")== 0)
-    {
-         // Define SIFT detector
-        cv::Ptr<cv::xfeatures2d::SIFT> detector = cv::xfeatures2d::SIFT::create();
+    // if(detectorType.compare("SIFT")== 0)
+    // {
+    //      // Define SIFT detector
+    //     cv::Ptr<cv::xfeatures2d::SIFT> detector = cv::xfeatures2d::SIFT::create();
 
-        // Detect keypoints
-        double t = (double)cv::getTickCount();
-        detector->detect(img, keypoints);  
-        t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
-        time.push_back(1000 * t / 1.0);
-        cout << "SIFT detection with n=" << keypoints.size() << " keypoints in " << 1000 * t / 1.0 << " ms" << endl;    
-    }
+    //     // Detect keypoints
+    //     double t = (double)cv::getTickCount();
+    //     detector->detect(img, keypoints);  
+    //     t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
+    //     time.push_back(1000 * t / 1.0);
+    //     cout << "SIFT detection with n=" << keypoints.size() << " keypoints in " << 1000 * t / 1.0 << " ms" << endl;    
+    // }
 }

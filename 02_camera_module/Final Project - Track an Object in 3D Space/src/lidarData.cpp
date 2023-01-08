@@ -3,41 +3,75 @@
 #include <algorithm>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
+#include <pcl/io/pcd_io.h>
+#include <pcl/point_types.h>
+
 #include "lidarData.hpp"
 
 
 using namespace std;
 
 // remove Lidar points based on min. and max distance in X, Y and Z
+// void cropLidarPoints(std::vector<LidarPoint> &lidarPoints, float minX, float maxX, float maxY, float minZ, float maxZ, float minR)
+// {
+//     std::vector<double> xPos;
+//     for(auto point : lidarPoints)
+//     {
+//         if(point.x >= minX && point.x <= maxX) {xPos.push_back(point.x);}
+//     }
+//     sort(xPos.begin(), xPos.end());
+//     double xPosMed = (xPos.size() % 2 == 0) ? (xPos[xPos.size()/2 - 1] + xPos[xPos.size()/2]) / 2 : xPos[xPos.size()/2]; 
+
+//     std::vector<LidarPoint> newLidarPts; 
+//     for(auto it=lidarPoints.begin(); it!=lidarPoints.end(); ++it) {
+        
+//         if( (*it).x > (xPosMed + 5))
+//         {
+//             lidarPoints.erase(it);
+//             --it;
+//             continue;
+//         }
+//         if( (*it).x>=minX && (*it).x<=maxX && (*it).z>=minZ && (*it).z<=maxZ && (*it).z<=0.0 && abs((*it).y)<=maxY && (*it).r>=minR )  // Check if Lidar point is outside of boundaries
+//         {
+//             newLidarPts.push_back(*it);
+//         }
+//     }
+
+//     lidarPoints = newLidarPts;
+// }
+
+// remove Lidar points based on min. and max distance in X, Y and Z
 void cropLidarPoints(std::vector<LidarPoint> &lidarPoints, float minX, float maxX, float maxY, float minZ, float maxZ, float minR)
 {
-    std::vector<double> xPos;
-    for(auto point : lidarPoints)
-    {
-        if(point.x >= minX && point.x <= maxX) {xPos.push_back(point.x);}
-    }
-    sort(xPos.begin(), xPos.end());
-    double xPosMed = (xPos.size() % 2 == 0) ? (xPos[xPos.size()/2 - 1] + xPos[xPos.size()/2]) / 2 : xPos[xPos.size()/2]; 
-
     std::vector<LidarPoint> newLidarPts; 
     for(auto it=lidarPoints.begin(); it!=lidarPoints.end(); ++it) {
         
-        if( (*it).x > (xPosMed + 5))
-        {
-            lidarPoints.erase(it);
-            --it;
-            continue;
-        }
-        if( (*it).x>=minX && (*it).x<=maxX && (*it).z>=minZ && (*it).z<=maxZ && (*it).z<=0.0 && abs((*it).y)<=maxY && (*it).r>=minR )  // Check if Lidar point is outside of boundaries
-        {
-            newLidarPts.push_back(*it);
-        }
+       if( (*it).x>=minX && (*it).x<=maxX && (*it).z>=minZ && (*it).z<=maxZ && (*it).z<=0.0 && abs((*it).y)<=maxY && (*it).r>=minR )  // Check if Lidar point is outside of boundaries
+       {
+           newLidarPts.push_back(*it);
+       }
     }
 
     lidarPoints = newLidarPts;
 }
 
-
+void writePcdFile(std::vector<LidarPoint> &input, const std::string fileName) {
+    pcl::PointCloud<pcl::PointXYZI> cloud;
+  cloud.width    = input.size();
+  cloud.height   = 1;
+  cloud.is_dense = false;
+  cloud.points.reserve(cloud.width * cloud.height);
+  // Fill in the cloud data
+  for (LidarPoint& pt : input) {
+    pcl::PointXYZI pcl_pt;
+    pcl_pt.x = pt.x;
+    pcl_pt.y = pt.y;
+    pcl_pt.z = pt.z;
+    pcl_pt.intensity = pt.r;
+    cloud.points.push_back(pcl_pt);
+  }
+  pcl::io::savePCDFile(fileName, cloud);
+}
 
 // Load Lidar points from a given location and store them in a vector
 void loadLidarFromFile(vector<LidarPoint> &lidarPoints, string filename)

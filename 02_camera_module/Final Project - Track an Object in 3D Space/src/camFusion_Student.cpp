@@ -132,7 +132,8 @@ void show3DObjects(std::vector<BoundingBox> &boundingBoxes, cv::Size worldSize, 
 
 
 // associate a given bounding box with the keypoints it contains
-void clusterKptMatchesWithROI(BoundingBox &boundingBox, std::vector<cv::KeyPoint> &kptsPrev, std::vector<cv::KeyPoint> &kptsCurr, std::vector<cv::DMatch> &kptMatches)
+void clusterKptMatchesWithROI(BoundingBox &boundingBox, std::vector<cv::KeyPoint> &kptsPrev, 
+        std::vector<cv::KeyPoint> &kptsCurr, std::vector<cv::DMatch> &kptMatches)
 {
     std::vector<double> distance;
 
@@ -259,7 +260,7 @@ void computeTTCLidar(std::vector<LidarPoint> &lidarPointsPrev,
     }
 }
 
-
+//  输出当前index所在的bbox中的matchingBoxId
 inline const bool matchPointToBoundingBox(const DataFrame &frame, const int index, int &matchingBoxId) {
 	int matchCount{ 0 };
     const cv::Point2f point(frame.keypoints.at(index).pt);
@@ -267,7 +268,7 @@ inline const bool matchPointToBoundingBox(const DataFrame &frame, const int inde
     for (int currentBoundingBoxIndex{ 0 }; currentBoundingBoxIndex < frame.boundingBoxes.size(); currentBoundingBoxIndex++) {
         if (!frame.boundingBoxes.at(currentBoundingBoxIndex).roi.contains(point)) { continue; }
 
-        if (++matchCount > 1) {
+        if (++matchCount > 1) {  // 如果匹配点在两个以上的bbox中，则舍弃
             matchingBoxId = -1;
             return false;
         }
@@ -285,7 +286,8 @@ inline const int getMaximumIndex(const std::vector<int> &inputData){
 	return std::distance(begin(inputData), std::max_element(begin(inputData), end(inputData)));
 }
 
-void matchBoundingBoxes(std::vector<cv::DMatch> &matches, std::map<int, int> &bbBestMatches, DataFrame &prevFrame, DataFrame &currFrame) {
+void matchBoundingBoxes(std::vector<cv::DMatch> &matches, std::map<int, int> &bbBestMatches,
+        DataFrame &prevFrame, DataFrame &currFrame) {
 
 	const int columns{ static_cast<int>(prevFrame.boundingBoxes.size()) };
 	const int rows{ static_cast<int>(currFrame.boundingBoxes.size()) };
@@ -300,6 +302,13 @@ void matchBoundingBoxes(std::vector<cv::DMatch> &matches, std::map<int, int> &bb
 
         ++listOfMatches.at(previousFrameMatchingBoundingBoxId).at(currentFrameMatchingBoundingBoxId);
 	}
+
+    for(int i =0; i < listOfMatches.size(); i ++) {
+        for (int j = 0; j < listOfMatches[i].size(); j++) {
+            std::cout << listOfMatches[i][j] << " ";
+        }
+        std::cout << std::endl;
+    }
 
     for (int columnIndex{ 0 }; columnIndex < prevFrame.boundingBoxes.size(); columnIndex++) {
         const int rowIndex{ getMaximumIndex(listOfMatches.at(columnIndex)) };
