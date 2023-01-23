@@ -18,7 +18,7 @@ mu = 0.
 sig = 10000.
 
 for n in range(len(measurements)):
-    [mu, sig] = update(mu, sig, measurements[n], measurement_sig)
+    [mu, sig] = update(mu, sig, measurements[n], measurement_sig)  # 这里先调用update相当于给初始值mu, sig赋予第一次测量值
     print('update: ', [mu, sig])
     [mu, sig] = predict(mu, sig, motion[n], motion_sig)
     print('predict: ', [mu, sig])
