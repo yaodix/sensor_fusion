@@ -168,7 +168,7 @@ def kalman_filter(x, P):
 ### use the code below to test your filter!
 ############################################
 
-measurements = [1, 2, 3]
+measurements = [1, 2, 3]  # 当前只知道位置的测量值，根据位置和速度的相对关系，使用卡尔曼滤波可以推算出位置和速度
 
 x = matrix([[0.], [0.]]) # initial state (location and velocity)
 P = matrix([[1000., 0.], [0., 1000.]]) # initial uncertainty, x初始均为0,所以方差较大
