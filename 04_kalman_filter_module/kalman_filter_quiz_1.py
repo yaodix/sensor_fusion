@@ -157,7 +157,7 @@ def kalman_filter(x, P):
         print(f"input z {Z}" )
         print(f"cur step x {x}, P {P}")
 
-        # prediction 下一个状态预测值
+        # prediction 下一个状态预测值, 本代码中没有考虑过程噪声
         x = F * x 
         P = F * P * F.transpose()
         print(f"next step x {x}, P {P}")
