@@ -96,6 +96,7 @@ void UKF::PredictRadarMeasurement(VectorXd* z_out, MatrixXd* S_out) {
   z_pred.fill(0.0);
   for (int i=0; i < 2*n_aug+1; ++i) {
     z_pred = z_pred + weights(i) * Zsig.col(i);
+    std::cout << z_pred.transpose() << std::endl;
   }
 
   // innovation covariance matrix S
