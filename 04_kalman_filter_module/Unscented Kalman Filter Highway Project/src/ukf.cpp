@@ -42,8 +42,6 @@ UKF::UKF() {
     use_radar_ = true;         // if this is false, radar measurements will be ignored (except during init)
     x_ = VectorXd(n_x_);       // initial state vector
     P_ = MatrixXd(n_x_, n_x_); // initial covariance matrix
-    std_a_ = 30;               // Process noise standard deviation longitudinal acceleration in m/s^2
-    std_yawdd_ = 30;           // Process noise standard deviation yaw acceleration in rad/s^2
 
     // DO NOT MODIFY measurement noise values below. These are provided by the sensor manufacturer.
     // --------------------------------------------------------------------------------------------
@@ -123,7 +121,7 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
 
     for (int index{ 1 }; index < aug_dim; index++) { weights_(index) = 0.5 / divisor; }
 
-    const double time_delta{ (meas_package.timestamp_ - prior_time_stamp) / 1000000.0 };
+    const double time_delta{ (meas_package.timestamp_ - prior_time_stamp) / 1000000.0 };  // time_delta: unit in second
 
     prior_time_stamp = meas_package.timestamp_;
     Prediction(time_delta);

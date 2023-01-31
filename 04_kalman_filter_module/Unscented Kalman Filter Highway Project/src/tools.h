@@ -20,7 +20,7 @@ struct lmarker
 
 struct rmarker
 {
-	double rho, phi, rho_dot;
+	double rho, phi, rho_dot;  // 径向距离，角度，径向速度
 	rmarker(double setRho, double setPhi, double setRhoDot)
 		: rho(setRho), phi(setPhi), rho_dot(setRhoDot)
 	{}
