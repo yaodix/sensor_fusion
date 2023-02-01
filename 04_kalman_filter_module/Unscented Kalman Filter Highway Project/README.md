@@ -1,76 +1,140 @@
-# SFND_Unscented_Kalman_Filter
-Sensor Fusion UKF Highway Project Starter Code
+# Unscented Kalman Filter Project
 
-<img src="media/ukf_highway_tracked.gif" width="700" height="400" />
+In this project, Unscented Kalman Filter (UKF) is implemented to estimate the state of multiple cars on a highway using noisy lidar and radar measurements.
 
-In this project you will implement an Unscented Kalman Filter to estimate the state of multiple cars on a highway using noisy lidar and radar measurements. Passing the project requires obtaining RMSE values that are lower that the tolerance outlined in the project rubric. 
+`main.cpp` is using `highway.h` to create a straight 3 lane highway environment with 3 traffic cars and the main ego car at the center. The viewer scene is centered around the ego car and the coordinate system is relative to the ego car as well. The traffic cars will be accelerating and altering their steering to change lanes. The `Z` axis is not taken into account for tracking, so you are only tracking along the `X/Y` axis.
 
-The main program can be built and ran by doing the following from the project top directory.
+Each of the traffic car's has its own UKF object generated for it, and will update each individual one during every time step using Constant Turn Rate and Velocity (CTRV) motion model.
 
-1. mkdir build
-2. cd build
-3. cmake ..
-4. make
-5. ./ukf_highway
+The accuracy will be evaluated by the Root Mean Squared Error (RMSE) over each time step and for each car.
 
-Note that the programs that need to be written to accomplish the project are src/ukf.cpp, and src/ukf.h
+## I. System Preparations
 
-The program main.cpp has already been filled out, but feel free to modify it.
+#### Starter code
 
-<img src="media/ukf_highway.png" width="700" height="400" />
+[https://github.com/udacity/SFND_Unscented_Kalman_Filter](https://github.com/udacity/SFND_Unscented_Kalman_Filter)
 
-`main.cpp` is using `highway.h` to create a straight 3 lane highway environment with 3 traffic cars and the main ego car at the center. 
-The viewer scene is centered around the ego car and the coordinate system is relative to the ego car as well. The ego car is green while the 
-other traffic cars are blue. The traffic cars will be accelerating and altering their steering to change lanes. Each of the traffic car's has
-it's own UKF object generated for it, and will update each indidual one during every time step. 
+#### Build requirements
 
-The red spheres above cars represent the (x,y) lidar detection and the purple lines show the radar measurements with the velocity magnitude along the detected angle. The Z axis is not taken into account for tracking, so you are only tracking along the X/Y axis.
+- cmake >= 3.5
+    * All OSes: [click here for installation instructions](https://cmake.org/install/)
+- make >= 4.1 (Linux, Mac), 3.81 (Windows)
+    * Linux: make is installed by default on most Linux distros
+- gcc/g++ >= 5.4
+    * Linux: gcc/g++ is installed by default on most Linux distros
+- PCL 1.2
 
----
+#### Build instructions
 
-## Other Important Dependencies
-* cmake >= 3.5
-  * All OSes: [click here for installation instructions](https://cmake.org/install/)
-* make >= 4.1 (Linux, Mac), 3.81 (Windows)
-  * Linux: make is installed by default on most Linux distros
-  * Mac: [install Xcode command line tools to get make](https://developer.apple.com/xcode/features/)
-  * Windows: [Click here for installation instructions](http://gnuwin32.sourceforge.net/packages/make.htm)
-* gcc/g++ >= 5.4
-  * Linux: gcc / g++ is installed by default on most Linux distros
-  * Mac: same deal as make - [install Xcode command line tools](https://developer.apple.com/xcode/features/)
-  * Windows: recommend using [MinGW](http://www.mingw.org/)
- * PCL 1.2
+```bash
+$ git clone https://github.com/udacity/SFND_Unscented_Kalman_Filter.git unscented-kalman-filter-project
+$ mkdir -p unscented-kalman-filter-project/build && cd unscented-kalman-filter-project/build
+$ cmake .. && make
+$ ./ukf_highway
+```
 
-## Basic Build Instructions
+## II. Debugging Details
 
-1. Clone this repo.
-2. Make a build directory: `mkdir build && cd build`
-3. Compile: `cmake .. && make`
-4. Run it: `./ukf_highway`
+In the `highway.h`, there are a number of parameters we can modify for debugging purpose.
 
-## Editor Settings
+- `trackCars` list can toggle on/off cars for UKF object to track
+- `projectedTime` and `projectedSteps` controls the visualization of predicted position in the future
+- `visualize_pcd` sets the visualization of Lidar point cloud data
 
-We've purposefully kept editor configuration files out of this repo in order to
-keep it as simple and environment agnostic as possible. However, we recommend
-using the following settings:
+```c++
+// Set which cars to track with UKF
+std::vector<bool> trackCars = {true,true,true};
+// Visualize sensor measurements
+bool visualize_lidar = true;
+bool visualize_radar = true;
+bool visualize_pcd = false;
+// Predict path in the future using UKF
+double projectedTime = 0;  // unit in seconds
+int projectedSteps = 0;
+```
 
-* indent using spaces
-* set tab width to 2 spaces (keeps the matrices in source code aligned)
+## III. Code Walkthrough
 
-## Code Style
+1. Initialize the UKF attributes 
 
-Please stick to [Google's C++ style guide](https://google.github.io/styleguide/cppguide.html) as much as possible.
+- dimension of the state vector `n_x_`
+- state vector `x_`
+- covariance matrix `P_`
+- dimension of the augmented state vector `n_aug_`
+- predicted sigma points matrix `Xsig_pred_`
+- sigma points weights vector `weights_`
+- standard deviation of longitudinal acceleration noise `std_a_`
+- standard deviation of yaw acceleration noise `std_yawdd_`
+- sigma points spreading parameter `lambda_`
 
-## Generating Additional Data
+2. Implement `UKF::ProcessMeasurement()` 
 
-This is optional!
+For the very first incoming measurement, state vector `x_`, covariance matrix `P_`, and timestamp `time_us_` are initialized according to the raw data `meas_package.raw_measurements_` and `meas_package.timestamp_`.
 
-If you'd like to generate your own radar and lidar modify the code in `highway.h` to alter the cars. Also check out `tools.cpp` to
-change how measurements are taken, for instance lidar markers could be the (x,y) center of bounding boxes by scanning the PCD environment
-and performing clustering. This is similar to what was done in Sensor Fusion Lidar Obstacle Detection.
+For the following measurements, timestamp `time_us_` is recorded, a sequence of functions are called to `Prediction()` and `UpdateLidar()`/`UpdateRadar()`.
 
-## Project Instructions and Rubric
+3. Implement `UKF::Prediction()` 
 
-This information is only accessible by people who are already enrolled in Sensor Fusion. 
-If you are enrolled, see the project page in the classroom
-for instructions and the project rubric.
+The prediction process is the same for both Lidar and Radar measurements.
+
+- creates an augmented mean vector `x_aug` and augmented state covariance matrix `P_aug`
+- generate sigma points matrix `Xsig_aug` for previously estimated state vector
+- predict sigma points matrix `Xsig_pred_` for the current state vector 
+- predict the state mean `x_` and covariance `P_` using weights and predicted sigma points
+
+4. Implement `UKF::UpdateLidar()` and `UKF::UpdateRadar()` 
+
+The steps to update Lidar and Radar measurements are similar, except Lidar points are in the **Cartesian** coordinates but Radar points are in the **Polar** coordinates. Therefore, they differ in the measurement dimension `n_z`, dimension of matrices, and the transformation equations.
+
+Generally, they follow the same steps to update the measurement.
+
+- transform the predicted sigma points `Xsig_pred_` into measurement space `Zsig` based on the sensor types
+- calculate the mean state `z_` and covariance matrix `S` with noise considered
+- calculate cross-correlation matrix `Tc` between state space and measurement space
+- calculate the Kalman gain `K`
+- update the state vector `x_` and covariance `P_`
+
+5. Test run
+
+The screenshot shown below is one of the simulation moments. The ego car is green while the other traffic cars are blue. The red spheres above cars represent the `(x,y)` lidar detection and the purple lines show the radar measurements with the velocity magnitude along the detected angle. The green spheres above cars represent the predicted path that cars would move in the near future.
+
+On the left-hand side, the root mean squared errors (RMSE) for position `(x,y)` and velocity `(Vx, Vy)` are calculated in realtime, which represent the prediction accuracy.
+
+<img src="media/ukf_highway.png" width="800" height="500" />
+
+## IV. Results
+
+I experimented different initial values for the state vector `x_`, covariance matrix `P_`, standard deviation of longitudinal acceleration noise `std_a_`, standard deviation of yaw acceleration noise `std_yawdd_`. And the following parameters serve the best result. The RMSE values are always within the thresholds during the simulation.
+
+```c++
+std_a_ = 2.0;
+std_yawdd_ = 2.0
+
+/* For Lidar */
+x_ << meas_package.raw_measurements_[0],
+    meas_package.raw_measurements_[1],
+    0,
+    0,
+    0;
+
+P_ << std_laspx_ * std_laspx_, 0, 0, 0, 0,
+    0, std_laspy_ * std_laspy_, 0, 0, 0,
+    0, 0, 1, 0, 0,
+    0, 0, 0, 1, 0,
+    0, 0, 0, 0, 1;
+
+/* For Radar */
+x_ << rho * cos(phi),
+    rho * sin(phi),
+    0,
+    0,
+    0;
+
+P_ << std_radr_*std_radr_, 0, 0, 0, 0,
+    0, std_radr_ * std_radr_, 0, 0, 0,
+    0, 0, std_radrd_ * std_radrd_, 0, 0,
+    0, 0, 0, std_radphi_ * std_radphi_, 0,
+    0, 0, 0, 0, 1;
+```
+
+<img src="media/ukf_highway_tracked.gif" width="800" height="500" />

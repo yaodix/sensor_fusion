@@ -16,7 +16,7 @@ dataset = []
 
 # read the measurement data, use 0.0 to stand LIDAR data
 # and 1.0 stand RADAR data
-with open('data_synthetic.txt', 'r') as f:  # fix, rb-->r
+with open('data/data_synthetic.txt', 'r') as f:  # fix, rb-->r
     lines = f.readlines()
     for line in lines:
         line = line.strip('\n')
